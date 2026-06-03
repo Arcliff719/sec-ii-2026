@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(mkdir -p \"D:\\\\AI_Project\\\\sec-ii-2026\\\\.tmp-merge-p2\")",
+      "Bash(mv \"D:\\\\AI_Project\\\\sec-ii-2026\\\\docs\\\\P2\"/* \"D:\\\\AI_Project\\\\sec-ii-2026\\\\.tmp-merge-p2\")",
+      "Bash(java *)",
+      "Read(//c/Program Files/Java/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(winget search *)",
+      "Bash(C:/Users/13531/jdk-17.0.2/bin/java.exe *)",
+      "Bash(C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe *)",
+      "Bash(mkdir -p /tmp/campushub_backup)",
+      "Bash(mv backend/pom.xml /tmp/campushub_backup/)",
+      "Bash(mv backend/src /tmp/campushub_backup/)",
+      "Bash(mv backend/SQL /tmp/campushub_backup/)",
+      "Bash(rm -f /tmp/campushub_backup/src/main/resources/application.yml)"
+    ]
+  }
+}
