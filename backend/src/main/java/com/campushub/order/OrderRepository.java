@@ -26,4 +26,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findAcceptHistory(Long providerId, OrderStatus status);
 
     Optional<Order> findFirstByTaskIdOrderByIdDesc(Long taskId);
+    List<Order> findByTaskId(Long taskId);
 }

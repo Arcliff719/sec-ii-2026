@@ -8,7 +8,7 @@ spring:
     # 整合了字符集、时区以及禁用 SSL 警告
     url: jdbc:mysql://localhost:3306/campushub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: junjulyaugust1021
+    password: Birthday616
     driver-class-name: com.mysql.cj.jdbc.Driver
     # 保留了连接池的高级配置
     hikari:

@@ -20,7 +20,7 @@ public class CampusHubApplication {
     @Bean
     CommandLineRunner startupBanner(Environment env) {
         return args -> {
-            String port = env.getProperty("server.port", "8080");
+            String port = env.getProperty("server.port", "5173");
             String ctx = env.getProperty("server.servlet.context-path", "");
             String base = "http://localhost:" + port + ctx;
 
@@ -28,7 +28,6 @@ public class CampusHubApplication {
             log.info("============================================================");
             log.info("  CampusHub 启动成功");
             log.info("============================================================");
-            log.info("  本地地址 : {}", base);
         };
     }
 }

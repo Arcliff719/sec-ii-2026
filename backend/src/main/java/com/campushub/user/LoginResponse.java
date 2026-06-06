@@ -12,13 +12,15 @@ public class LoginResponse {
     private Long userId;
     private String studentId;
     private String nickname;
+    private String role;
     private boolean needBindStudentId = false;
 
-    public LoginResponse(String token, Long userId, String studentId, String nickname) {
+    public LoginResponse(String token, Long userId, String studentId, String nickname, String role) {
         this.token = token;
         this.userId = userId;
         this.studentId = studentId;
         this.nickname = nickname;
+        this.role = role;
         this.needBindStudentId = false;
     }
 

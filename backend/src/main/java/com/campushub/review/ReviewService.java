@@ -1,6 +1,7 @@
 package com.campushub.review;
 
 import com.campushub.common.BusinessException;
+import com.campushub.notification.NotificationService;
 import com.campushub.order.Order;
 import com.campushub.order.Order.OrderStatus;
 import com.campushub.order.OrderRepository;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
+
+    private final NotificationService notificationService;
 
     private final OrderRepository orderRepository;
     private final ReviewRepository reviewRepository;
@@ -42,6 +45,11 @@ public class ReviewService {
         review.setScore(score);
         review.setComment(comment);
         reviewRepository.save(review);
+        // 通知服务方收到评价
+        String[] starMsgs = {"", "还需努力", "再接再厉", "做得不错", "非常满意", "完美无瑕"};
+        String starMsg = starMsgs[score >= 1 && score <= 5 ? score : 3];
+        notificationService.createNotification(order.getProvider().getId(),
+                "收到新评价", "您收到了 " + score + " 星好评：" + starMsg, "NEW_REVIEW");
 
         applyCreditScore(order.getProvider(), score);
     }

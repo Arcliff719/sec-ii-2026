@@ -1,6 +1,7 @@
 package com.campushub.order;
 
 import com.campushub.common.BusinessException;
+import com.campushub.notification.NotificationService;
 import com.campushub.order.Order.OrderStatus;
 import com.campushub.task.Task;
 import com.campushub.task.Task.TaskStatus;
@@ -21,6 +22,7 @@ public class OrderService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public OrderDTO getByTaskId(Long taskId) {
@@ -59,6 +61,9 @@ public class OrderService {
 
         task.setStatus(Task.TaskStatus.in_progress);
         order = orderRepository.save(order);
+        // 通知需求方：有人接单了
+        notificationService.createNotification(task.getRequester().getId(),
+                "有人接单啦", provider.getName() + " 接了你的需求「" + task.getTitle() + "」", "ORDER_ACCEPTED");
         return toDTO(order);
     }
 
@@ -77,6 +82,13 @@ public class OrderService {
         order.setStatus(OrderStatus.completed);
         order.setCompletedAt(LocalDateTime.now());
         order.getTask().setStatus(TaskStatus.completed);
+        // 通知服务方：需求方已确认完成
+        String msg = order.getRequester().getName() + " 已确认该需求被完成";
+        if (order.getTask().getReward() != null && order.getTask().getReward().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            msg += "，请注意查看报酬是否被支付";
+        }
+        notificationService.createNotification(order.getProvider().getId(),
+                "订单已完成", msg, "ORDER_COMPLETED");
     }
 
     @Transactional

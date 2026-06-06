@@ -34,7 +34,7 @@
                 v-if="!row.isRead"
                 link
                 type="primary"
-                @click="handleMarkRead(row.id)"
+                @click="handleMarkRead(row)"
             >
               标记已读
             </el-button>
@@ -56,8 +56,10 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useNotificationStore } from '@/notification/notificationStore'
 
+const router = useRouter()
 const notificationStore = useNotificationStore()
 
 const formatDate = (dateStr) => {
@@ -66,8 +68,10 @@ const formatDate = (dateStr) => {
   return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`
 }
 
-const handleMarkRead = async (id) => {
-  await notificationStore.markAsRead(id)
+const handleMarkRead = async (row) => {
+  await notificationStore.markAsRead(row.id)
+  const match = row.content?.match(/complaintId=(\d+)/)
+  if (match) router.push(`/admin/complaint/${match[1]}`)
 }
 
 const handleMarkAllRead = async () => {

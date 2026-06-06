@@ -123,3 +123,20 @@ CREATE TABLE notifications (
     KEY idx_created_at (created_at),
     CONSTRAINT fk_notification_receiver FOREIGN KEY (receiver_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='通知表';
+
+-- --------------------------------------------
+-- 8. 投诉表 complaints
+-- --------------------------------------------
+CREATE TABLE IF NOT EXISTS complaints (
+    id              BIGINT          NOT NULL AUTO_INCREMENT COMMENT '投诉ID',
+    complainant_id  BIGINT          NOT NULL                COMMENT '投诉发起人ID',
+    order_id        BIGINT          NOT NULL                COMMENT '被投诉订单ID',
+    target_id       BIGINT          NOT NULL                COMMENT '被投诉人ID',
+    reason          VARCHAR(100)    NOT NULL                COMMENT '投诉理由',
+    description     VARCHAR(500)    DEFAULT NULL            COMMENT '详细描述',
+    image_url       VARCHAR(500)    DEFAULT NULL            COMMENT '证据图片URL',
+    create_time     DATETIME(6)     DEFAULT NULL,
+    PRIMARY KEY (id),
+    KEY idx_order_id (order_id),
+    CONSTRAINT fk_complaint_order FOREIGN KEY (order_id) REFERENCES orders(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='投诉表';

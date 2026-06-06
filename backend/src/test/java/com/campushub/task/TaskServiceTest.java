@@ -76,7 +76,6 @@ class TaskServiceTest {
     void createTaskRejectsProviderRole() {
         User provider = user(2L, Role.provider);
         when(userRepository.findById(2L)).thenReturn(Optional.of(provider));
-
         assertThatThrownBy(() -> taskService.createTask(createRequest(), 2L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("仅需求方可以发布需求");
@@ -106,7 +105,7 @@ class TaskServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("只能删除自己发布的需求");
 
-        verify(taskRepository, never()).delete(any());
+        verify(taskRepository, never()).delete((Task) any());
     }
 
     @Test

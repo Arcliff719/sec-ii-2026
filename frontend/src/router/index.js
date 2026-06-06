@@ -9,6 +9,7 @@ const routes = [
   { path: '/admin',         name: 'AdminDashboard', component: () => import('@/admin/AdminDashboard.vue'), meta: { requiresAuth: true } },
   { path: '/admin/users',   name: 'AdminUsers',     component: () => import('@/admin/UserManagement.vue'), meta: { requiresAuth: true } },
   { path: '/admin/tasks',   name: 'AdminTasks',     component: () => import('@/admin/TaskManagement.vue'), meta: { requiresAuth: true } },
+  { path: '/admin/complaint/:id', name: 'ComplaintDetail', component: () => import('@/admin/ComplaintDetail.vue'), meta: { requiresAuth: true } },
   { path: '/my-orders',     name: 'MyOrders', component: () => import('@/order/MyOrdersView.vue'), meta: { requiresAuth: true } },
   { path: '/notifications', name: 'Notifications',component: () => import('@/views/Notifications.vue'), meta: { requiresAuth: true } },
   { path: '/profile',       name: 'Profile',     component: () => import('@/views/Profile.vue'), meta: { requiresAuth: true } }

@@ -14,4 +14,5 @@ public class UserProfileDTO {
     private String nickname;
     private String avatar;
     private Integer creditScore;
+    private String role;
 }

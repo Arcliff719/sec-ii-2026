@@ -110,12 +110,19 @@
                   确认完成
                 </button>
                 <button
-                    v-if="['published', 'in_progress'].includes(task.status)"
+                    v-if="task.status === 'published'"
                     class="cancel-btn"
                     :loading="actionLoading"
                     @click="handleCancel"
                 >
                   取消需求
+                </button>
+                <button
+                    v-if="task.status === 'in_progress'"
+                    class="cancel-btn"
+                    disabled
+                >
+                  已被接单，无法取消
                 </button>
                 <button
                     v-if="task.status === 'completed' && canShowReview && !reviewDetail"
@@ -125,6 +132,15 @@
                   评价服务方
                 </button>
               </template>
+
+              <!-- 投诉按钮 -->
+              <button
+                  v-if="canComplain"
+                  class="complaint-btn"
+                  @click="complaintVisible = true"
+              >
+                投诉
+              </button>
 
               <p v-if="userStore.isProvider && task.status === 'published'" class="action-hint">
                 接单后订单进入进行中状态
@@ -140,6 +156,35 @@
         :orderId="currentOrderId"
         @submitted="handleReviewSubmitted"
     />
+
+    <el-dialog v-model="complaintVisible" title="投诉" width="440px" append-to-body>
+      <el-form label-width="80px">
+        <el-form-item label="投诉理由">
+          <el-select v-model="complaintForm.reason" placeholder="选择投诉理由">
+            <el-option label="虚假信息" value="虚假信息" />
+            <el-option label="付款纠纷" value="付款纠纷" />
+            <el-option label="服务未完成" value="服务未完成" />
+            <el-option label="恶意评价" value="恶意评价" />
+            <el-option label="其他" value="其他" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="详细描述">
+          <el-input v-model="complaintForm.description" type="textarea" :rows="3" placeholder="请描述具体情况..." />
+        </el-form-item>
+        <el-form-item label="证据图片">
+          <el-upload action="/v1/files/upload" :headers="uploadHeaders"
+            :show-file-list="false" :on-success="handleComplaintUpload">
+            <el-button size="small">上传图片</el-button>
+          </el-upload>
+          <img v-if="complaintForm.imageUrl" :src="'http://localhost:8080' + complaintForm.imageUrl"
+            style="max-width:120px;margin-top:8px" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="complaintVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleComplaint">提交</el-button>
+      </template>
+    </el-dialog>
 
     <el-dialog v-model="uploadDialogVisible" title="上传收款码" width="420px" append-to-body destroy-on-close>
       <div style="text-align: center; padding: 10px 0;">
@@ -171,7 +216,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import taskApi from '@/task/taskApi'
 import orderApi from '@/order/orderApi'
@@ -180,6 +225,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import ReviewDialog from '@/review/reviewDialog.vue'
 import reviewApi from '@/review/reviewApi'
+import http from '@/common/http'
 
 const route = useRoute()
 const router = useRouter()
@@ -341,29 +387,11 @@ async function handleComplete() {
 
 async function handleCancel() {
   try {
-    await ElMessageBox.confirm('确定要取消吗？', '取消需求', { type: 'warning' })
+    await ElMessageBox.confirm('确定要取消该需求吗？', '取消需求', { type: 'warning' })
     actionLoading.value = true
-
-    if (!lastOrderId.value && task.value.status === 'in_progress') {
-      try {
-        const res = await orderApi.getByTaskId(task.value.id)
-        if (res.data && res.data.data && res.data.data.orderId) {
-          lastOrderId.value = res.data.data.orderId
-        }
-      } catch (e) {
-        console.warn('获取订单失败', e)
-      }
-    }
-
-    if (lastOrderId.value) {
-      await orderApi.cancel(lastOrderId.value)
-      ElMessage.success('已取消')
-      task.value.status = 'cancelled'
-    } else {
-      await taskApi.deleteTask(task.value.id)
-      ElMessage.success('已删除需求')
-      router.push('/')
-    }
+    await taskApi.deleteTask(task.value.id)
+    ElMessage.success('已删除需求')
+    router.push('/')
   } catch (e) {
     if (e !== 'cancel') console.error(e)
   } finally {
@@ -398,6 +426,28 @@ async function handleReviewSubmitted() {
     const reviewRes = await reviewApi.getByOrderId(currentOrderId.value)
     reviewDetail.value = reviewRes.data?.data
   }
+}
+
+// ======== 投诉 ========
+const complaintVisible = ref(false)
+const complaintForm = reactive({ reason: '', description: '', imageUrl: '' })
+const canComplain = computed(() => task.value && orderDetail.value?.orderId &&
+  ['in_progress', 'completed'].includes(task.value.status))
+function handleComplaintUpload(res) { complaintForm.imageUrl = res.data }
+async function handleComplaint() {
+  if (!complaintForm.reason) { ElMessage.warning('请选择投诉理由'); return }
+  try {
+    await http.post('/complaints', {
+      orderId: orderDetail.value?.orderId,
+      targetId: task.value.publisher?.userId === userStore.userId
+        ? orderDetail.value?.providerId : userStore.userId,
+      reason: complaintForm.reason,
+      description: complaintForm.description,
+      imageUrl: complaintForm.imageUrl
+    })
+    ElMessage.success('投诉已提交')
+    complaintVisible.value = false
+  } catch { /* handled by interceptor */ }
 }
 </script>
 
@@ -671,6 +721,19 @@ async function handleReviewSubmitted() {
   background: #fee2e2;
   color: #ef4444;
 }
+
+.complaint-btn {
+  background: transparent;
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  margin-top: 8px;
+}
+.complaint-btn:hover { background: #fef3c7; }
 
 .action-hint {
   text-align: center;

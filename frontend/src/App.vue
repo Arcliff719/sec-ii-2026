@@ -72,10 +72,12 @@
 
           <el-popover
               v-if="userStore.isLoggedIn && route.path === '/'"
+              ref="notifyPopover"
               placement="bottom-end"
               :width="360"
               trigger="click"
-              @before-enter="loadRecentNotifications"
+              :hide-after="0"
+              @show="loadRecentNotifications"
           >
             <template #reference>
               <el-badge :value="notificationStore.unreadCount" :hidden="notificationStore.unreadCount === 0" class="notification-badge">
@@ -87,10 +89,10 @@
                 </el-button>
               </el-badge>
             </template>
-            <div class="notification-popover">
+            <div class="notification-popover" @click.stop>
               <div class="popover-header">
                 <span>通知</span>
-                <el-button link type="primary" @click="goToNotifications" style="color: #ffffff;">查看更多</el-button>
+                <el-button link type="primary" @click="goToNotifications">查看更多</el-button>
               </div>
               <div class="popover-list" v-loading="recentLoading">
                 <div v-if="recentNotifications.length === 0" class="empty-tip">暂无通知</div>
@@ -99,7 +101,7 @@
                     :key="item.id"
                     class="popover-item"
                     :class="{ unread: !item.isRead }"
-                    @click="handleNotificationClick(item)"
+                    @click.stop="handleNotificationClick(item)"
                 >
                   <div class="item-title">{{ item.title }}</div>
                   <div class="item-content">{{ item.content }}</div>
@@ -174,7 +176,7 @@ async function loadRecentNotifications() {
   recentLoading.value = true
   try {
     const res = await http.get('/notifications', {
-      params: { pageNum: 1, pageSize: 5, unreadOnly: false }
+      params: { page: 1, size: 5, unreadOnly: false }
     })
     recentNotifications.value = res.data.data.items || []
   } catch (error) {
@@ -185,8 +187,13 @@ async function loadRecentNotifications() {
 }
 
 async function handleNotificationClick(item) {
+  // 如果通知内容包含 complaintId，跳转到对应申诉详情页（业务逻辑）
+  const match = item.content?.match(/complaintId=(\d+)/)
+  if (match) {
+    router.push(`/admin/complaint/${match[1]}`)
+  }
   if (!item.isRead) {
-    await notificationStore.markAsRead(item.id)
+    notificationStore.markAsRead(item.id)
     const idx = recentNotifications.value.findIndex(n => n.id === item.id)
     if (idx !== -1) recentNotifications.value[idx].isRead = true
     notificationStore.fetchUnreadCount()
@@ -232,52 +239,37 @@ watch(() => route.path, (newPath) => {
 <style>
 /* ===== CSS Variables - 设计系统 ===== */
 :root {
-  /* 主色调 - 清新薄荷绿 */
   --primary: #10b981;
   --primary-light: #34d399;
   --primary-dark: #059669;
-
-  /* 强调色 - 温暖橙 */
   --accent: #f59e0b;
   --accent-light: #fbbf24;
   --accent-dark: #d97706;
-
-  /* 中性色 */
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
-
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
-
-  /* 状态色 */
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
   --info: #3b82f6;
-
-  /* 边框和阴影 */
   --border-color: #e2e8f0;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-
-  /* 圆角 */
   --radius-sm: 3px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
   --radius-full: 9999px;
-
-  /* 动画 */
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 350ms ease;
 }
 
-/* ===== 全局样式重置 ===== */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -292,14 +284,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== 主容器 ===== */
 #app-container {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
 }
 
-/* ===== 导航栏 - 毛玻璃效果 ===== */
 .navbar {
   position: fixed;
   top: 0;
@@ -323,7 +313,6 @@ body {
   gap: 32px;
 }
 
-/* Logo */
 .logo {
   display: flex;
   align-items: center;
@@ -363,7 +352,6 @@ body {
   background-clip: text;
 }
 
-/* 导航链接 */
 .nav-links {
   display: flex;
   align-items: center;
@@ -402,7 +390,6 @@ body {
   background: rgba(16, 185, 129, 0.12);
 }
 
-/* 右侧操作区 */
 .nav-actions {
   display: flex;
   align-items: center;
@@ -453,7 +440,6 @@ body {
   height: 14px;
 }
 
-/* ===== 通知功能相关样式 ===== */
 .notification-badge {
   margin-left: 8px;
   cursor: pointer;
@@ -536,7 +522,6 @@ body {
   color: #94a3b8;
 }
 
-/* ===== 用户资料与登出样式 ===== */
 .user-profile-entry {
   display: flex;
   align-items: center;
@@ -604,7 +589,6 @@ body {
   height: 18px;
 }
 
-/* ===== 主内容区 ===== */
 .main-content {
   padding-top: 88px;
   padding-bottom: 40px;
@@ -615,7 +599,6 @@ body {
   padding-right: 24px;
 }
 
-/* ===== 页面过渡动画 ===== */
 .page-fade-enter-active,
 .page-fade-leave-active {
   transition: opacity 0.25s ease, transform 0.25s ease;
@@ -631,7 +614,6 @@ body {
   transform: translateY(-10px);
 }
 
-/* ===== 背景装饰 - 流动的渐变球 ===== */
 .bg-decoration {
   position: fixed;
   top: 0;
@@ -680,21 +662,12 @@ body {
 }
 
 @keyframes blob-float {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  25% {
-    transform: translate(30px, -30px) scale(1.05);
-  }
-  50% {
-    transform: translate(-20px, 20px) scale(0.95);
-  }
-  75% {
-    transform: translate(20px, 40px) scale(1.02);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -30px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(20px, 40px) scale(1.02); }
 }
 
-/* ===== Element Plus 样式覆盖 ===== */
 .el-card {
   border: none !important;
   border-radius: var(--radius-lg) !important;
@@ -759,24 +732,12 @@ body {
   color: var(--text-secondary) !important;
 }
 
-/* ===== 响应式 ===== */
 @media (max-width: 768px) {
-  .navbar-inner {
-    padding: 0 16px;
-  }
-  .nav-links {
-    display: none;
-  }
-  .logo-text {
-    display: none;
-  }
-  .main-content {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .role-switch-btn span {
-    display: none;
-  }
+  .navbar-inner { padding: 0 16px; }
+  .nav-links { display: none; }
+  .logo-text { display: none; }
+  .main-content { padding-left: 16px; padding-right: 16px; }
+  .role-switch-btn span { display: none; }
   .notification-badge { margin-left: 4px; }
   .notification-icon svg { width: 20px; height: 20px; }
 }

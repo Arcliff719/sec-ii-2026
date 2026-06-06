@@ -56,7 +56,7 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getStudentId(), user.getId());
-        return new LoginResponse(token, user.getId(), user.getStudentId(), user.getNickname());
+        return new LoginResponse(token, user.getId(), user.getStudentId(), user.getNickname(), user.getRole() != null ? user.getRole().name() : null);
     }
 
     // 密码登录（支持学号或手机号）
@@ -80,7 +80,7 @@ public class UserService implements UserDetailsService {
             throw new BusinessException("密码错误");
         }
         String token = jwtUtil.generateToken(user.getStudentId(), user.getId());
-        return new LoginResponse(token, user.getId(), user.getStudentId(), user.getNickname());
+        return new LoginResponse(token, user.getId(), user.getStudentId(), user.getNickname(), user.getRole() != null ? user.getRole().name() : null);
     }
 
     // 手机号+验证码登录（自动注册或直接登录）
@@ -114,7 +114,7 @@ public class UserService implements UserDetailsService {
         }
 
         String token = jwtUtil.generateToken(user.getStudentId(), user.getId());
-        LoginResponse response = new LoginResponse(token, user.getId(), user.getStudentId(), user.getNickname());
+        LoginResponse response = new LoginResponse(token, user.getId(), user.getStudentId(), user.getNickname(), user.getRole() != null ? user.getRole().name() : null);
         response.setNeedBindStudentId(user.getStudentId().isEmpty());
         return response;
     }
@@ -125,7 +125,8 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new BusinessException("用户不存在"));
         String plainPhone = aesUtil.decrypt(user.getPhone());
         return new UserProfileDTO(user.getId(), user.getStudentId(), plainPhone,
-                user.getNickname(), user.getAvatar(), user.getCreditScore());
+                user.getNickname(), user.getAvatar(), user.getCreditScore(),
+                user.getRole() != null ? user.getRole().name() : null);
     }
 
     // 更新资料

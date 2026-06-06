@@ -6,6 +6,8 @@ import com.campushub.common.BusinessException;
 import com.campushub.common.PageResult;
 import com.campushub.notification.Notification;
 import com.campushub.notification.NotificationRepository;
+import com.campushub.order.OrderRepository;
+import com.campushub.review.ReviewRepository;
 import com.campushub.task.Task;
 import com.campushub.task.TaskRepository;
 import com.campushub.user.User;
@@ -33,6 +35,8 @@ public class AdminService {
     private final TaskRepository taskRepository;
     private final CategoryRepository categoryRepository;
     private final NotificationRepository notificationRepository;
+    private final OrderRepository orderRepository;
+    private final ReviewRepository reviewRepository;
 
     private User requireAdmin(Long userId) {
         User user = userRepository.findById(userId)
@@ -161,6 +165,8 @@ public class AdminService {
         if (!taskRepository.existsById(taskId)) {
             throw new BusinessException(404, "需求不存在");
         }
+        // 管理员删除需求时级联删除关联的订单和评价
+        orderRepository.findByTaskId(taskId).forEach(o -> orderRepository.delete(o));
         taskRepository.deleteById(taskId);
     }
 

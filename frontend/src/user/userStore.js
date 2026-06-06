@@ -72,7 +72,7 @@ export const useUserStore = defineStore('user', () => {
       const res = await http.post('/auth/login/password', { account, password })
       if (res.data.code === 200) {
         const d = res.data.data
-        login({ id: d.userId, nickname: d.nickname, role: 'requester', avatar: null, creditScore: 5.0 }, d.token)
+        login({ id: d.userId, nickname: d.nickname, role: d.role || 'requester', avatar: null, creditScore: 5.0 }, d.token)
         return true
       }
     } catch { /* handled by interceptor */ }
@@ -85,7 +85,7 @@ export const useUserStore = defineStore('user', () => {
       const res = await http.post('/auth/login/sms', { phone, code })
       if (res.data.code === 200) {
         const d = res.data.data
-        login({ id: d.userId, nickname: d.nickname, role: 'requester', avatar: null, creditScore: 5.0 }, d.token)
+        login({ id: d.userId, nickname: d.nickname, role: d.role || 'requester', avatar: null, creditScore: 5.0 }, d.token)
         return true
       }
     } catch { /* handled by interceptor */ }
